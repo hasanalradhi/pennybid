@@ -1,0 +1,167 @@
+<section class="dashboard" aria-labelledby="dashboard-title">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Procurement workspace</p>
+      <h1 id="dashboard-title">Tender dashboard</h1>
+      <p class="page-description">Track active requests and monitor competitive bids.</p>
+    </div>
+
+    <button
+      class="primary-action"
+      type="button"
+      aria-controls="create-tender-panel"
+      [attr.aria-expanded]="isCreateFormOpen()"
+      (click)="toggleCreateForm()"
+    >
+      @if (isCreateFormOpen()) {
+        Close form
+      } @else {
+        <span aria-hidden="true">+</span>
+        Create tender
+      }
+    </button>
+  </div>
+
+  @if (successMessage(); as message) {
+    <div class="success-message" role="status">
+      <span>{{ message }}</span>
+      <button type="button" (click)="successMessage.set(null)">Dismiss</button>
+    </div>
+  }
+
+  @if (isCreateFormOpen()) {
+    <app-create-tender-form
+      id="create-tender-panel"
+      (tenderCreated)="handleTenderCreated($event)"
+      (cancelled)="isCreateFormOpen.set(false)"
+    />
+  }
+
+  <div class="metrics" aria-label="Tender summary">
+    <article class="metric-card">
+      <span class="metric-icon metric-icon-open" aria-hidden="true">↗</span>
+      <div>
+        <p>Open tenders</p>
+        <strong>{{ openCount() }}</strong>
+      </div>
+    </article>
+
+    <article class="metric-card">
+      <span class="metric-icon metric-icon-bids" aria-hidden="true">#</span>
+      <div>
+        <p>Total bids</p>
+        <strong>{{ totalBids() }}</strong>
+      </div>
+    </article>
+
+    <article class="metric-card">
+      <span class="metric-icon metric-icon-value" aria-hidden="true">$</span>
+      <div>
+        <p>Lowest active bid</p>
+        <strong>
+          @if (lowestActiveBid(); as bid) {
+            {{ bid | currency: 'USD' : 'symbol' : '1.0-0' }}
+          } @else {
+            —
+          }
+        </strong>
+      </div>
+    </article>
+  </div>
+
+  <section class="tender-panel" aria-labelledby="tenders-heading">
+    <div class="panel-heading">
+      <div>
+        <h2 id="tenders-heading">Procurement requests</h2>
+        <p>Review tender status, activity, and current pricing.</p>
+      </div>
+
+      <button class="refresh-button" type="button" (click)="loadTenders()" [disabled]="isLoading()">
+        <span aria-hidden="true">↻</span>
+        Refresh
+      </button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="state-message" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        Loading tenders…
+      </div>
+    } @else if (errorMessage(); as error) {
+      <div class="error-state" role="alert">
+        <div>
+          <strong>Unable to load tenders</strong>
+          <p>{{ error }}</p>
+        </div>
+        <button type="button" (click)="loadTenders()">Try again</button>
+      </div>
+    } @else if (tenders().length === 0) {
+      <div class="empty-state">
+        <span aria-hidden="true">◇</span>
+        <h3>No tenders yet</h3>
+        <p>Create your first procurement request to start receiving bids.</p>
+      </div>
+    } @else {
+      <div class="table-scroll">
+        <table>
+          <caption class="visually-hidden">
+            Procurement tenders and their current bidding activity
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Tender</th>
+              <th scope="col">Status</th>
+              <th scope="col">Deadline</th>
+              <th scope="col" class="numeric">Lowest bid</th>
+              <th scope="col" class="numeric">Bids</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (tender of tenders(); track tender.id) {
+              <tr>
+                <td>
+                  <a class="tender-title" [routerLink]="['/tenders', tender.id]">
+                    {{ tender.title }}
+                  </a>
+                  <span class="tender-meta">Quantity: {{ tender.quantity }}</span>
+                </td>
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.status-open]="tender.status === 'Open'"
+                    [class.status-review]="tender.status === 'Under Review'"
+                    [class.status-closed]="tender.status === 'Closed'"
+                  >
+                    <span aria-hidden="true"></span>
+                    {{ tender.status }}
+                  </span>
+                </td>
+                <td>
+                  <span class="date-primary">{{ tender.deadline | date: 'MMM d, y' }}</span>
+                  <span class="date-secondary">{{ tender.deadline | date: 'h:mm a' }}</span>
+                </td>
+                <td class="numeric bid-value">
+                  @if (tender.lowestBid !== null) {
+                    {{ tender.lowestBid | currency: 'USD' : 'symbol' : '1.0-0' }}
+                  } @else {
+                    <span class="muted">No bids</span>
+                  }
+                </td>
+                <td class="numeric">
+                  <span class="bid-count">{{ tender.bidsCount }}</span>
+                </td>
+                <td class="action-cell">
+                  <a class="view-link" [routerLink]="['/tenders', tender.id]">
+                    View
+                    <span aria-hidden="true">→</span>
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</section>

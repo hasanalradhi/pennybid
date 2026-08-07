@@ -1,0 +1,39 @@
+<div class="app-shell">
+  <header class="app-header">
+    <div class="header-content">
+      <a class="brand" routerLink="/" aria-label="PennyBid home">
+        <img
+          ngSrc="/penny-logo-black.svg"
+          width="136"
+          height="38"
+          priority
+          alt="Penny"
+        />
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="product-name">PennyBid</span>
+      </a>
+
+      <nav class="primary-navigation" aria-label="Primary navigation">
+        <a
+          routerLink="/"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          Procurement Dashboard
+        </a>
+      </nav>
+
+      <div class="user-summary" aria-label="Signed in user">
+        <span class="avatar" aria-hidden="true">PM</span>
+        <span class="user-copy">
+          <span class="user-name">Procurement Manager</span>
+          <span class="user-role">Manager account</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content" id="main-content">
+    <router-outlet />
+  </main>
+</div>

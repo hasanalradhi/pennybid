@@ -1,0 +1,205 @@
+<section class="detail-page" aria-labelledby="detail-title">
+  <a class="back-link" routerLink="/">← Back to dashboard</a>
+
+  @if (isLoading()) {
+    <div class="state-card" role="status" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      Loading tender…
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="error-card" role="alert">
+      <div>
+        <h1 id="detail-title">Unable to load tender</h1>
+        <p>{{ error }}</p>
+      </div>
+      <button type="button" (click)="loadTender()">Try again</button>
+    </div>
+  } @else if (tender(); as currentTender) {
+    <div class="tender-heading">
+      <div>
+        <p class="eyebrow">Vendor bidding workspace</p>
+        <h1 id="detail-title">{{ currentTender.title }}</h1>
+        <p>{{ currentTender.description || 'No additional description was provided.' }}</p>
+      </div>
+      <span
+        class="status-badge"
+        [class.status-open]="currentTender.status === 'Open'"
+        [class.status-review]="currentTender.status === 'Under Review'"
+        [class.status-closed]="currentTender.status === 'Closed'"
+      >
+        <span aria-hidden="true"></span>
+        {{ currentTender.status }}
+      </span>
+    </div>
+
+    <div class="summary-grid" aria-label="Tender summary">
+      <article>
+        <span>Requested quantity</span>
+        <strong>{{ currentTender.quantity }} units</strong>
+        <small>Total number of items the buyer needs.</small>
+      </article>
+      <article>
+        <span>Submission deadline</span>
+        <strong>{{ currentTender.deadline | date: 'MMM d, y' }}</strong>
+        <small>{{ currentTender.deadline | date: 'h:mm a' }}</small>
+      </article>
+      <article>
+        <span>Lowest bid</span>
+        <strong>
+          @if (currentTender.lowestBid !== null) {
+            {{ currentTender.lowestBid | currency: 'USD' : 'symbol' : '1.0-0' }}
+          } @else {
+            No bids yet
+          }
+        </strong>
+        <small>Total offer for all requested units.</small>
+      </article>
+      <article>
+        <span>Bid submissions</span>
+        <strong>{{ currentTender.bidsCount }}</strong>
+        <small>Total offers received.</small>
+      </article>
+    </div>
+
+    <div class="bidding-layout">
+      <section class="bid-panel" aria-labelledby="submit-bid-title">
+        <div class="panel-heading">
+          <p class="eyebrow">Your offer</p>
+          <h2 id="submit-bid-title">Submit a bid</h2>
+          <p>Enter your total price for supplying all {{ currentTender.quantity }} requested units.</p>
+        </div>
+
+        @if (currentTender.status !== 'Open') {
+          <div class="closed-notice" role="status">
+            This tender is {{ currentTender.status.toLowerCase() }} and is not accepting bids.
+          </div>
+        } @else {
+          @if (successMessage(); as message) {
+            <div class="success-message" role="status">{{ message }}</div>
+          }
+          @if (submissionError(); as error) {
+            <div class="submission-error" role="alert">{{ error }}</div>
+          }
+
+          <form [formGroup]="bidForm" (ngSubmit)="submitBid()" novalidate>
+            <div class="field">
+              <label for="vendor-name">Vendor name <span aria-hidden="true">*</span></label>
+              <input
+                id="vendor-name"
+                type="text"
+                formControlName="vendorName"
+                autocomplete="organization"
+                placeholder="e.g. Acme Technologies"
+                [attr.aria-invalid]="bidForm.controls.vendorName.touched && bidForm.controls.vendorName.invalid"
+                aria-describedby="vendor-error"
+              />
+              @if (bidForm.controls.vendorName.touched && bidForm.controls.vendorName.invalid) {
+                <span id="vendor-error" class="field-error">
+                  Enter a vendor name between 2 and 100 characters.
+                </span>
+              }
+            </div>
+
+            <div class="field">
+              <label for="bid-amount">Total bid amount (USD) <span aria-hidden="true">*</span></label>
+              <div class="money-input">
+                <span aria-hidden="true">$</span>
+                <input
+                  id="bid-amount"
+                  type="number"
+                  formControlName="amount"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  [attr.aria-invalid]="bidForm.controls.amount.touched && bidForm.controls.amount.invalid"
+                  aria-describedby="amount-help amount-error"
+                />
+              </div>
+              <span id="amount-help" class="field-help">
+                Enter the full price for all {{ currentTender.quantity }} units, not the per-unit price.
+              </span>
+              @if (bidForm.controls.amount.touched && bidForm.controls.amount.invalid) {
+                <span id="amount-error" class="field-error">Enter a bid greater than zero.</span>
+              }
+            </div>
+
+            <button class="submit-button" type="submit" [disabled]="isSubmitting()">
+              @if (isSubmitting()) {
+                <span class="button-spinner" aria-hidden="true"></span>
+                Submitting bid…
+              } @else {
+                Submit bid
+              }
+            </button>
+          </form>
+        }
+      </section>
+
+      <section class="activity-panel" aria-labelledby="bid-activity-title">
+        <div class="activity-heading">
+          <div>
+            <p class="eyebrow">Market activity</p>
+            <h2 id="bid-activity-title">Bid activity</h2>
+          </div>
+          <div class="activity-controls">
+            <span class="live-status">
+              <span aria-hidden="true"></span>
+              Live · 3s
+            </span>
+            <button
+              class="refresh-button"
+              type="button"
+              (click)="loadTender()"
+              [disabled]="isRefreshing() || isSubmitting()"
+            >
+              @if (isRefreshing()) {
+                <span class="refresh-spinner" aria-hidden="true"></span>
+                Updating…
+              } @else {
+                Refresh
+              }
+            </button>
+          </div>
+        </div>
+
+        <div class="activity-meta" aria-live="polite">
+          <span>{{ currentTender.bidsCount }} total bids</span>
+          @if (lastUpdated(); as updatedAt) {
+            <span>Updated {{ updatedAt | date: 'h:mm:ss a' }}</span>
+          }
+        </div>
+
+        @if (refreshWarning(); as warning) {
+          <div class="refresh-warning" role="status">{{ warning }}</div>
+        }
+
+        @if (sortedBids().length === 0) {
+          <div class="empty-bids">
+            <span aria-hidden="true">◇</span>
+            <strong>No bid details available</strong>
+            <p>New bids submitted during this session will appear here.</p>
+          </div>
+        } @else {
+          <ol class="bid-list">
+            @for (bid of sortedBids(); track bid.id; let rank = $index) {
+              <li [class.leading-bid]="rank === 0" [class.pending-bid]="isPendingBid(bid)">
+                <span class="rank" aria-label="Rank {{ rank + 1 }}">{{ rank + 1 }}</span>
+                <div>
+                  <strong>{{ bid.vendorName }}</strong>
+                  <small>
+                    @if (isPendingBid(bid)) {
+                      Submitting…
+                    } @else {
+                      {{ bid.submittedAt | date: 'MMM d, h:mm a' }}
+                    }
+                  </small>
+                </div>
+                <span class="amount">{{ bid.amount | currency: 'USD' : 'symbol' : '1.0-0' }}</span>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+    </div>
+  }
+</section>

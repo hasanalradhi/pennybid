@@ -1,0 +1,117 @@
+<section class="form-panel" aria-labelledby="create-tender-title">
+  <div class="form-heading">
+    <div>
+      <p class="eyebrow">New procurement request</p>
+      <h2 id="create-tender-title">Create a tender</h2>
+      <p>Provide the request details vendors need to prepare their bids.</p>
+    </div>
+    <button class="close-button" type="button" (click)="cancel()" [disabled]="isSubmitting()">
+      <span aria-hidden="true">×</span>
+      <span class="visually-hidden">Close create tender form</span>
+    </button>
+  </div>
+
+  @if (serverError(); as error) {
+    <div class="server-error" role="alert">{{ error }}</div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="field field-wide">
+      <label for="tender-title">Tender title <span aria-hidden="true">*</span></label>
+      <input
+        id="tender-title"
+        type="text"
+        formControlName="title"
+        autocomplete="off"
+        placeholder="e.g. 500 Corporate Laptops"
+        [attr.aria-invalid]="form.controls.title.touched && form.controls.title.invalid"
+        aria-describedby="title-hint title-error"
+      />
+      <span id="title-hint" class="hint">Use a clear description of the requested goods or services.</span>
+      @if (form.controls.title.touched && form.controls.title.invalid) {
+        <span id="title-error" class="field-error">
+          @if (form.controls.title.hasError('required')) {
+            Enter a tender title.
+          } @else {
+            The title must contain between 3 and 120 characters.
+          }
+        </span>
+      }
+    </div>
+
+    <div class="field field-wide">
+      <label for="tender-description">Description</label>
+      <textarea
+        id="tender-description"
+        formControlName="description"
+        rows="4"
+        placeholder="Describe specifications, delivery expectations, or other requirements"
+        [attr.aria-invalid]="form.controls.description.touched && form.controls.description.invalid"
+        aria-describedby="description-hint description-error"
+      ></textarea>
+      <span id="description-hint" class="hint">Optional, up to 1,000 characters.</span>
+      @if (form.controls.description.touched && form.controls.description.invalid) {
+        <span id="description-error" class="field-error">
+          Description must not exceed 1,000 characters.
+        </span>
+      }
+    </div>
+
+    <div class="field">
+      <div class="label-with-help">
+        <label for="tender-quantity">Requested quantity <span aria-hidden="true">*</span></label>
+        <span class="help-trigger" tabindex="0" aria-describedby="quantity-help">?</span>
+        <span id="quantity-help" class="help-tooltip" role="tooltip">
+          Number of units required, such as 500 laptops or 80 chairs.
+        </span>
+      </div>
+      <input
+        id="tender-quantity"
+        type="number"
+        formControlName="quantity"
+        min="1"
+        step="1"
+        [attr.aria-invalid]="form.controls.quantity.touched && form.controls.quantity.invalid"
+        aria-describedby="quantity-error"
+      />
+      @if (form.controls.quantity.touched && form.controls.quantity.invalid) {
+        <span id="quantity-error" class="field-error">Enter a positive whole number.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="tender-deadline">Submission deadline <span aria-hidden="true">*</span></label>
+      <input
+        id="tender-deadline"
+        type="datetime-local"
+        formControlName="deadline"
+        [min]="minimumDeadline"
+        [attr.aria-invalid]="form.controls.deadline.touched && form.controls.deadline.invalid"
+        aria-describedby="deadline-error"
+      />
+      @if (form.controls.deadline.touched && form.controls.deadline.invalid) {
+        <span id="deadline-error" class="field-error">
+          @if (form.controls.deadline.hasError('required')) {
+            Choose a submission deadline.
+          } @else {
+            The deadline must be in the future.
+          }
+        </span>
+      }
+    </div>
+
+    <div class="form-actions field-wide">
+      <button class="secondary-button" type="button" (click)="cancel()" [disabled]="isSubmitting()">
+        Cancel
+      </button>
+      <button class="submit-button" type="submit" [disabled]="isSubmitting()">
+        @if (isSubmitting()) {
+          <span class="button-spinner" aria-hidden="true"></span>
+          Creating…
+        } @else {
+          Create tender
+        }
+      </button>
+    </div>
+  </form>
+</section>
