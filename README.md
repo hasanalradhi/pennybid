@@ -2,6 +2,14 @@
 
 PennyBid is a procurement tender dashboard with an Angular frontend and an Express/MongoDB API. Procurement teams can create and monitor tenders, while vendors can submit bids and see ranked activity update live.
 
+## Live application
+
+- Frontend: [pennybid.vercel.app](https://pennybid.vercel.app)
+- API: [pennybid-api.onrender.com](https://pennybid-api.onrender.com)
+- API health: [pennybid-api.onrender.com/api/health](https://pennybid-api.onrender.com/api/health)
+
+The Angular frontend is deployed on Vercel, the Express API runs on Render in Frankfurt, and persistent data is stored in MongoDB Atlas on AWS Ireland. The production deployment has been smoke-tested for dashboard loading, direct tender navigation, status-based bidding restrictions, live bid polling, API connectivity, and responsive layouts.
+
 ## Technology
 
 - Angular 22 frontend
